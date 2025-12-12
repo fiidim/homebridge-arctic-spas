@@ -3,6 +3,8 @@
   "pluginType": "platform",
   "singular": true,
   "strictValidation": false,
+  "headerDisplay": "All enabled devices below will be loaded as accessories.\nYou must have an Arctic Spas Hot Tub and an API KEY for this plugin to work.  You will need to go to [My Arctic Spas](https://www.myarcticspa.com/spa/SpaAPIManagement.aspx) website, Login and request an API key first.",
+  "footerDisplay": "See the [homebridge-arctic-spas](https://github.com/fiidim/homebridge-arctic-spas) developer page for detailed documentation, and to submit feature requests and bug reports.",
   "schema": {
     "type": "object",
     "additionalProperties": false,
@@ -96,5 +98,77 @@
       }
     },
     "required": ["name", "apiKey"]
-  }
+  },
+    "layout": [
+    {
+      "type": "section",
+      "title": "General",
+      "expandable": true,
+      "expanded": true,
+      "items": [
+        {
+          "description": "Enter your Arctic Spas credentials here.",
+          "items": [
+            "apiKey",
+            "name",
+            "pollIntervalSeconds"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "title": "Pumps",
+      "expandable": true,
+      "expanded": true,
+      "items": [
+        {
+          "description": "Pumps and Lights configuration.  Choose only the pumps that exist on your hot tub.",
+          "items": [
+            "enableLights",
+            "enablePump1",
+            "enablePump2",
+            "enablePump3",
+            "enablePump4",
+            "enablePump5",
+            "enableEasyMode"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "title": "Spaboy",
+      "expandable": true,
+      "expanded": true,
+      "items": [
+        {
+          "description": "Spaboy configuration.  Choose only the features that exist on your hot tub.",
+          "items": [
+            "enablePh",
+            "enableOrp",
+            "useFahrenheitDisplay"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "title": "Other Features",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        {
+          "description": "Other configuration.  Choose only the features that exist on your hot tub.",
+          "items": [
+            "enableBlower1",
+            "enableBlower2",
+            "enableSds",
+            "enableYess",
+            "enableFogger"
+          ]
+        }
+      ]
+    }
+  ]
 }
