@@ -7,13 +7,13 @@
   "footerDisplay": "See the [homebridge-arctic-spas](https://github.com/fiidim/homebridge-arctic-spas) developer page for detailed documentation, and to submit feature requests and bug reports.",
   "schema": {
     "type": "object",
+    "required": ["name", "apiKey"],
     "additionalProperties": false,
     "properties": {
       "name": { "title": "Name", "type": "string", "default": "Arctic Spas" },
       "apiKey": {
         "title": "X-API-KEY",
-        "type": "string",
-        "required": true
+        "type": "string"
       },
       "pollIntervalSeconds": {
         "title": "Poll Interval (seconds)",
@@ -96,8 +96,7 @@
         "type": "boolean",
         "default": true
       }
-    },
-    "required": ["name", "apiKey"]
+    }
   },
     "layout": [
     {

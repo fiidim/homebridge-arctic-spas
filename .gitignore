@@ -1,6 +1,5 @@
 # Ignore compiled code
 dist
-.git-old
 
 # ------------- Defaults ------------- #
 .DS_Store
@@ -125,3 +124,4 @@ dist
 .idea
 
 /test/hbConfig
+instructions.txt
