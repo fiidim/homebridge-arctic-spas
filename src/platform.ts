@@ -1,209 +1,189 @@
-import type { API, Characteristic, DynamicPlatformPlugin, Logging, Logger, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
-
-import { ExamplePlatformAccessory } from './platformAccessory.js';
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
-
-// This is only required when using Custom Services and Characteristics not support by HomeKit
-import { EveHomeKitTypes } from 'homebridge-lib/EveHomeKitTypes';
-
+// src/platform.ts
+import type {
+  API,
+  DynamicPlatformPlugin,
+  Logger,
+  PlatformAccessory,
+  PlatformConfig,
+  Service,
+  Characteristic,
+} from 'homebridge';
+import { PLUGIN_NAME, PLATFORM_NAME } from './settings.js';
 import { SpaClient } from './spaClient.js';
-import { ArcticSpaAccessory } from './spaAccessory.js';
-
-/**
- * HomebridgePlatform
- * This class is the main constructor for your plugin, this is where you should
- * parse the user config and discover/register accessories with Homebridge.
- */
-export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
-  public readonly Service: typeof Service;
-  public readonly Characteristic: typeof Characteristic;
-
-  // this is used to track restored cached accessories
-  public readonly accessories: Map<string, PlatformAccessory> = new Map();
-  public readonly discoveredCacheUUIDs: string[] = [];
-
-  // This is only required when using Custom Services and Characteristics not support by HomeKit
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly CustomServices: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly CustomCharacteristics: any;
-
-  constructor(
-    public readonly log: Logging,
-    public readonly config: PlatformConfig,
-    public readonly api: API,
-  ) {
-    this.Service = api.hap.Service;
-    this.Characteristic = api.hap.Characteristic;
-
-    // This is only required when using Custom Services and Characteristics not support by HomeKit
-    this.CustomServices = new EveHomeKitTypes(this.api).Services;
-    this.CustomCharacteristics = new EveHomeKitTypes(this.api).Characteristics;
-
-    this.log.debug('Finished initializing platform:', this.config.name);
-
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', () => {
-      log.debug('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
-      this.discoverDevices();
-    });
-  }
-
-  /**
-   * This function is invoked when homebridge restores cached accessories from disk at startup.
-   * It should be used to set up event handlers for characteristics and update respective values.
-   */
-  configureAccessory(accessory: PlatformAccessory) {
-    this.log.info('Loading accessory from cache:', accessory.displayName);
-
-    // add the restored accessory to the accessories cache, so we can track if it has already been registered
-    this.accessories.set(accessory.UUID, accessory);
-  }
-
-  /**
-   * This is an example method showing how to register discovered accessories.
-   * Accessories must only be registered once, previously created accessories
-   * must not be registered again to prevent "duplicate UUID" errors.
-   */
-  discoverDevices() {
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    const exampleDevices = [
-      {
-        exampleUniqueId: 'ABCD',
-        exampleDisplayName: 'Bedroom',
-      },
-      {
-        exampleUniqueId: 'EFGH',
-        exampleDisplayName: 'Kitchen',
-      },
-      {
-        // This is an example of a device which uses a Custom Service
-        exampleUniqueId: 'IJKL',
-        exampleDisplayName: 'Backyard',
-        CustomService: 'AirPressureSensor',
-      },
-    ];
-
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
-
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.get(uuid);
-
-      if (existingAccessory) {
-        // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. e.g.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
-
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, existingAccessory);
-
-        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, e.g.:
-        // remove platform accessories when no longer present
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-        // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
-      } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.exampleDisplayName);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.exampleDisplayName, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
-
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      }
-
-      // push into discoveredCacheUUIDs
-      this.discoveredCacheUUIDs.push(uuid);
-    }
-
-    // you can also deal with accessories from the cache which are no longer present by removing them from Homebridge
-    // for example, if your plugin logs into a cloud account to retrieve a device list, and a user has previously removed a device
-    // from this cloud account, then this device will no longer be present in the device list but will still be in the Homebridge cache
-    for (const [uuid, accessory] of this.accessories) {
-      if (!this.discoveredCacheUUIDs.includes(uuid)) {
-        this.log.info('Removing existing accessory from cache:', accessory.displayName);
-        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      }
-    }
-  }
-}
-
+import { ArcticSpasEnvironmentAccessory } from './accessories/spaEnvironmentAccessory.js';
+import { ArcticSpasLightsAccessory } from './accessories/spaLightsAccessory.js';
+import { ArcticSpasPumpsAccessory } from './accessories/spaPumpsAccessory.js';
+import { ArcticSpasPhAccessory } from './accessories/spaPhAccessory.js';
+import { ArcticSpasOrpAccessory } from './accessories/spaOrpAccessory.js';
 
 interface ArcticSpaConfig extends PlatformConfig {
   apiKey: string;
   pollIntervalSeconds?: number;
+
+  enableLights?: boolean;
+
+  enablePump1?: boolean;
+  enablePump2?: boolean;
+  enablePump3?: boolean;
+  enablePump4?: boolean;
+  enablePump5?: boolean;
+
+  enableBlower1?: boolean;
+  enableBlower2?: boolean;
+
+  enableEasyMode?: boolean;
+  enableSds?: boolean;
+  enableYess?: boolean;
+  enableFogger?: boolean;
+
+  enablePh?: boolean;
+  enableOrp?: boolean;
 }
 
-export class ArcticSpaPlatform implements DynamicPlatformPlugin {
-  public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
-  private accessories: PlatformAccessory[] = [];
-  private client!: SpaClient;
+export class ArcticSpasPlatform implements DynamicPlatformPlugin {
+  public readonly Service: typeof Service;
+  public readonly Characteristic: typeof Characteristic;
+
+  public readonly log: Logger;
+  public readonly api: API;
+  public readonly config: ArcticSpaConfig;
+
+  private readonly accessories: PlatformAccessory[] = [];
+  private client?: SpaClient;
   private pollIntervalMs = 60000;
 
-  constructor(
-    public readonly log: Logger,
-    public readonly config: ArcticSpaConfig,
-    public readonly api: API,
+  public constructor(
+    log: Logger,
+    config: PlatformConfig,
+    api: API,
   ) {
-    this.log.info('Initializing Arctic Spa Platform');
+    this.log = log;
+    this.api = api;
+    this.config = config as ArcticSpaConfig;
 
-    if (!config.apiKey) {
-      this.log.error('No apiKey configured for Arctic Spa plugin – disabling.');
+    this.Service = this.api.hap.Service;
+    this.Characteristic = this.api.hap.Characteristic;
+
+    this.log.info('Initializing Arctic Spas Platform');
+
+    if (!this.config.apiKey) {
+      this.log.error('No apiKey configured for Arctic Spas plugin – plugin will be disabled.');
       return;
     }
 
-    this.client = new SpaClient(config.apiKey);
-    if (config.pollIntervalSeconds && config.pollIntervalSeconds >= 15) {
-      this.pollIntervalMs = config.pollIntervalSeconds * 1000;
+    this.client = new SpaClient(this.config.apiKey);
+
+    if (
+      typeof this.config.pollIntervalSeconds === 'number' &&
+      this.config.pollIntervalSeconds >= 15
+    ) {
+      this.pollIntervalMs = this.config.pollIntervalSeconds * 1000;
     }
 
     this.api.on('didFinishLaunching', () => {
-      this.log.info('Homebridge finished launching – setting up Arctic Spa accessory...');
-      this.setupAccessory();
+      this.log.info('Homebridge finished launching – setting up Arctic Spas accessories...');
+      this.setupAccessories();
     });
   }
 
-  configureAccessory(accessory: PlatformAccessory) {
+  public configureAccessory(accessory: PlatformAccessory): void {
     this.log.info('Loaded accessory from cache:', accessory.displayName);
     this.accessories.push(accessory);
   }
 
-  private setupAccessory() {
-    const uuid = this.api.hap.uuid.generate('ArcticSpa:Main');
-    let accessory = this.accessories.find(a => a.UUID === uuid);
-
-    if (!accessory) {
-      accessory = new this.api.platformAccessory('Arctic Spa', uuid);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.log.info('Registered new Arctic Spa accessory');
+  private setupAccessories(): void {
+    if (!this.client) {
+      this.log.error('SpaClient is not initialized; cannot set up accessories.');
+      return;
     }
 
-    new ArcticSpaAccessory(this, accessory, this.client, this.pollIntervalMs);
+    const envUuid = this.api.hap.uuid.generate('ArcticSpas:Environment');
+    const lightsUuid = this.api.hap.uuid.generate('ArcticSpas:Lights');
+    const pumpsUuid = this.api.hap.uuid.generate('ArcticSpas:Pumps');
+    const phUuid = this.api.hap.uuid.generate('ArcticSpas:Ph');
+    const orpUuid = this.api.hap.uuid.generate('ArcticSpas:Orp');
+
+    const environmentAccessory =
+    this.getOrCreateAccessory('Arctic Spas Environment', envUuid);
+
+    const pumpsAccessory =
+    this.getOrCreateAccessory('Arctic Spas Pumps', pumpsUuid);
+
+    // 🔦 lights (optional)
+    const enableLights = this.config.enableLights ?? true;
+    let lightsAccessory: PlatformAccessory | undefined;
+    if (enableLights) {
+      lightsAccessory =
+      this.getOrCreateAccessory('Arctic Spas Lights', lightsUuid);
+    }
+
+    const enablePh = this.config.enablePh ?? true;
+    const enableOrp = this.config.enableOrp ?? true;
+
+    let phAccessory: PlatformAccessory | undefined;
+    let orpAccessory: PlatformAccessory | undefined;
+
+    if (enablePh) {
+      phAccessory =
+      this.getOrCreateAccessory('Arctic Spas pH', phUuid);
+    }
+
+    if (enableOrp) {
+      orpAccessory =
+      this.getOrCreateAccessory('Arctic Spas ORP', orpUuid);
+    }
+
+    const pollIntervalMs = this.pollIntervalMs;
+
+    const enabledSwitches = {
+      pump1: this.config.enablePump1 ?? true,
+      pump2: this.config.enablePump2 ?? true,
+      pump3: this.config.enablePump3 ?? true,
+      pump4: this.config.enablePump4 ?? false,
+      pump5: this.config.enablePump5 ?? false,
+
+      blower1: this.config.enableBlower1 ?? true,
+      blower2: this.config.enableBlower2 ?? true,
+
+      easymode: this.config.enableEasyMode ?? true,
+      sds: this.config.enableSds ?? true,
+      yess: this.config.enableYess ?? true,
+      fogger: this.config.enableFogger ?? true,
+    } as const;
+
+
+    new ArcticSpasEnvironmentAccessory(this, environmentAccessory, this.client, pollIntervalMs);
+
+    if (lightsAccessory) {
+
+      new ArcticSpasLightsAccessory(this, lightsAccessory, this.client, pollIntervalMs);
+    }
+
+
+    new ArcticSpasPumpsAccessory(this, pumpsAccessory, this.client, pollIntervalMs, enabledSwitches);
+
+    if (phAccessory) {
+
+      new ArcticSpasPhAccessory(this, phAccessory, this.client, pollIntervalMs);
+    }
+
+    if (orpAccessory) {
+
+      new ArcticSpasOrpAccessory(this, orpAccessory, this.client, pollIntervalMs);
+    }
+  }
+
+  private getOrCreateAccessory(name: string, uuid: string): PlatformAccessory {
+    const cached = this.accessories.find((a) => a.UUID === uuid);
+    if (cached) {
+      return cached;
+    }
+
+    const accessory = new this.api.platformAccessory(name, uuid);
+    this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    this.log.info('Registered new accessory:', name);
+    this.accessories.push(accessory);
+    return accessory;
   }
 }

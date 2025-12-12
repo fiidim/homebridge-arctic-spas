@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ArcticSpaPlatform",
+  "pluginAlias": "ArcticSpasPlatform",
   "pluginType": "platform",
   "singular": true,
   "strictValidation": false,
@@ -7,23 +7,87 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "default": "Arctic Spa"
-      },
+      "name": { "title": "Name", "type": "string", "default": "Arctic Spas" },
       "apiKey": {
         "title": "X-API-KEY",
         "type": "string",
-        "required": true,
-        "description": "API key from myarcticspa.com Spa API Management page."
+        "required": true
       },
       "pollIntervalSeconds": {
         "title": "Poll Interval (seconds)",
         "type": "number",
         "default": 60,
-        "minimum": 15,
-        "description": "How often to query /v2/spa/status. Lower = more responsive, higher = less API load."
+        "minimum": 15
+      },
+      "enableLights": {
+        "title": "Enable Lights",
+        "type": "boolean",
+        "default": true
+      },
+      "enablePump1": {
+        "title": "Enable Pump 1",
+        "type": "boolean",
+        "default": true
+      },
+      "enablePump2": {
+        "title": "Enable Pump 2",
+        "type": "boolean",
+        "default": true
+      },
+      "enablePump3": {
+        "title": "Enable Pump 3",
+        "type": "boolean",
+        "default": true
+      },
+      "enablePump4": {
+        "title": "Enable Pump 4",
+        "type": "boolean",
+        "default": false
+      },
+      "enablePump5": {
+        "title": "Enable Pump 5",
+        "type": "boolean",
+        "default": false
+      },
+      "enablePh": {
+        "title": "Enable pH Tile",
+        "type": "boolean",
+        "default": true
+      },
+      "enableOrp": {
+        "title": "Enable ORP Tile",
+        "type": "boolean",
+        "default": true
+      },
+      "enableBlower1": {
+        "title": "Enable Blower 1",
+        "type": "boolean",
+        "default": true
+      },
+      "enableBlower2": {
+        "title": "Enable Blower 2",
+        "type": "boolean",
+        "default": true
+      },
+      "enableEasyMode": {
+        "title": "Enable Easy Mode",
+        "type": "boolean",
+        "default": true
+      },
+      "enableSds": {
+        "title": "Enable SDS",
+        "type": "boolean",
+        "default": true
+      },
+      "enableYess": {
+        "title": "Enable YESS",
+        "type": "boolean",
+        "default": true
+      },
+      "enableFogger": {
+        "title": "Enable Fogger",
+        "type": "boolean",
+        "default": true
       }
     },
     "required": ["name", "apiKey"]

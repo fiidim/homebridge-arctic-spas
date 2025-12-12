@@ -2,7 +2,7 @@ import {
   Service,
   PlatformAccessory,
 } from 'homebridge';
-import { ArcticSpaPlatform } from './platform.js';
+import { ArcticSpasPlatform } from './platform.js';
 import { SpaClient, SpaStatus } from './spaClient.js';
 
 export class ArcticSpaAccessory {
@@ -16,7 +16,7 @@ export class ArcticSpaAccessory {
   private readonly maxTempC = 40;
 
   constructor(
-    private readonly platform: ArcticSpaPlatform,
+    private readonly platform: ArcticSpasPlatform,
     private readonly accessory: PlatformAccessory,
     private readonly client: SpaClient,
     pollIntervalMs: number,
@@ -27,7 +27,7 @@ export class ArcticSpaAccessory {
     this.accessory
       .getService(Service.AccessoryInformation)!
       .setCharacteristic(Characteristic.Manufacturer, 'Arctic Spas')
-      .setCharacteristic(Characteristic.Model, 'Arctic Spa (API)')
+      .setCharacteristic(Characteristic.Model, 'Arctic Spas (API)')
       .setCharacteristic(Characteristic.SerialNumber, 'ArcticSpa-1');
 
     // Thermostat
@@ -150,7 +150,7 @@ export class ArcticSpaAccessory {
 
       this.platform.log.debug('Updated spa status:', JSON.stringify(status));
     } catch (err) {
-      this.platform.log.error('Failed to poll Arctic Spa status:', (err as Error).message);
+      this.platform.log.error('Failed to poll Arctic Spas status:', (err as Error).message);
     }
   }
 

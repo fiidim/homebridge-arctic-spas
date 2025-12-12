@@ -1,6 +1,6 @@
 {
-  "name": "homebridge-arctic-spa",
-  "displayName": "Arctic Spa",
+  "name": "homebridge-arctic-spas",
+  "displayName": "Arctic Spas",
   "type": "module",
   "version": "1.0.0",
   "private": true,
@@ -30,7 +30,8 @@
     "build": "rimraf ./dist && tsc",
     "lint": "eslint . --max-warnings=0",
     "prepublishOnly": "npm run lint && npm run build",
-    "watch": "npm run build && npm link && nodemon"
+    "watch": "npm run build && npm link && nodemon",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "homebridge-lib": "^7.1.12",

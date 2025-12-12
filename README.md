@@ -218,14 +218,14 @@ Note these links are here for help but are not supported/verified by the Homebri
 {
   "platforms": [
     {
-      "platform": "ArcticSpaPlatform",
-      "name": "Arctic Spa",
+      "platform": "ArcticSpasPlatform",
+      "name": "Arctic Spas",
       "apiKey": "YOUR_API_KEY_HERE",
       "pollIntervalSeconds": 60
     }
   ]
 }
 
-Add additional services (SDS, YESS, Boost, etc.)
-Add pH / ORP as sensors
-Or convert this into multiple accessories (one for temp, one for pumps, etc.) instead of a single mega-accessory.
+
+If you want to go even further, we can also:
+Add a “pH Alert” / “ORP Alert” OccupancySensor that’s “occupied” when severity is red or yellow, which will show as an orange tile and is very automation-friendly.
