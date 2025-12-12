@@ -1,0 +1,31 @@
+{
+  "pluginAlias": "ArcticSpaPlatform",
+  "pluginType": "platform",
+  "singular": true,
+  "strictValidation": false,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "Arctic Spa"
+      },
+      "apiKey": {
+        "title": "X-API-KEY",
+        "type": "string",
+        "required": true,
+        "description": "API key from myarcticspa.com Spa API Management page."
+      },
+      "pollIntervalSeconds": {
+        "title": "Poll Interval (seconds)",
+        "type": "number",
+        "default": 60,
+        "minimum": 15,
+        "description": "How often to query /v2/spa/status. Lower = more responsive, higher = less API load."
+      }
+    },
+    "required": ["name", "apiKey"]
+  }
+}
