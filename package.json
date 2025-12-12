@@ -36,6 +36,13 @@
     "watch": "npm run build && npm link && nodemon",
     "prepare": "npm run build"
   },
+  "files": [
+    "dist",
+    "config.schema.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "types": "dist/index.d.ts",
   "dependencies": {
     "homebridge-lib": "^7.1.12",
     "axios": "^1.13.0"
