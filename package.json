@@ -2,7 +2,7 @@
   "name": "homebridge-arctic-spas",
   "displayName": "Homebridge Arctic Spas",
   "type": "module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Control an Arctic Spas Hot Tub via API, and report SpaBoy results.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/fiidim/homebridge-arctic-spas#readme",
