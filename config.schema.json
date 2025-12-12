@@ -19,6 +19,11 @@
         "default": 60,
         "minimum": 15
       },
+      "useFahrenheitDisplay": {
+        "title": "Display temperature in Fahrenheit",
+        "type": "boolean",
+        "default": false
+      },
       "enableLights": {
         "title": "Enable Lights",
         "type": "boolean",

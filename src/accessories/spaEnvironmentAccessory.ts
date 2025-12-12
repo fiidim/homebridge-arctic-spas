@@ -51,9 +51,15 @@ export class ArcticSpasEnvironmentAccessory {
       .setProps({ minValue: this.minTempC, maxValue: this.maxTempC })
       .onSet(this.handleSetTargetTemperature.bind(this));
 
+    const displayUnits =
+      this.platform.config.useFahrenheitDisplay
+        ? Characteristic.TemperatureDisplayUnits.FAHRENHEIT
+        : Characteristic.TemperatureDisplayUnits.CELSIUS;
+
     this.thermostatService
       .getCharacteristic(Characteristic.TemperatureDisplayUnits)
-      .updateValue(Characteristic.TemperatureDisplayUnits.CELSIUS);
+      .updateValue(displayUnits);
+
 
     void this.pollStatus();
     setInterval(() => {

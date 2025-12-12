@@ -19,7 +19,7 @@ import { ArcticSpasOrpAccessory } from './accessories/spaOrpAccessory.js';
 interface ArcticSpaConfig extends PlatformConfig {
   apiKey: string;
   pollIntervalSeconds?: number;
-
+  useFahrenheitDisplay?: boolean;
   enableLights?: boolean;
 
   enablePump1?: boolean;
