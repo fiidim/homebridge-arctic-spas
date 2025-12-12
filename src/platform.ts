@@ -66,20 +66,21 @@ export class ArcticSpasPlatform implements DynamicPlatformPlugin {
     this.Characteristic = this.api.hap.Characteristic;
 
     this.log.info('Initializing Arctic Spas Platform');
+    // Work out the poll interval first
+    if (
+      typeof this.config.pollIntervalSeconds === 'number' &&
+    this.config.pollIntervalSeconds >= 15
+    ) {
+      this.pollIntervalMs = this.config.pollIntervalSeconds * 1000;
+    }
 
     if (!this.config.apiKey) {
       this.log.error('No apiKey configured for Arctic Spas plugin – plugin will be disabled.');
       return;
     }
 
-    this.client = new SpaClient(this.config.apiKey);
-
-    if (
-      typeof this.config.pollIntervalSeconds === 'number' &&
-      this.config.pollIntervalSeconds >= 15
-    ) {
-      this.pollIntervalMs = this.config.pollIntervalSeconds * 1000;
-    }
+    // 👇 Pass the poll interval into the client so it can rate-limit /status
+    this.client = new SpaClient(this.config.apiKey, this.pollIntervalMs);
 
     this.api.on('didFinishLaunching', () => {
       this.log.info('Homebridge finished launching – setting up Arctic Spas accessories...');

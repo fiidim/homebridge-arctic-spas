@@ -36,8 +36,15 @@ export interface SpaStatus {
 
 export class SpaClient {
   private readonly http: AxiosInstance;
+  private readonly minIntervalMs: number;
 
-  public constructor(apiKey: string) {
+  private lastStatus: SpaStatus | null = null;
+  private lastFetchTime = 0;
+  private inFlight: Promise<SpaStatus> | null = null;
+
+  public constructor(apiKey: string, minIntervalMs = 0) {
+    this.minIntervalMs = minIntervalMs;
+
     this.http = axios.create({
       baseURL: 'https://api.myarcticspa.com/v2/spa',
       headers: {
@@ -49,8 +56,31 @@ export class SpaClient {
   }
 
   public async getStatus(): Promise<SpaStatus> {
-    const response = await this.http.get<SpaStatus>('/status');
-    return response.data;
+    const now = Date.now();
+
+    // 1) If we have fresh data, just return it
+    if (this.lastStatus && now - this.lastFetchTime < this.minIntervalMs) {
+      return this.lastStatus;
+    }
+
+    // 2) If a request is already in flight, share it
+    if (this.inFlight) {
+      return this.inFlight;
+    }
+
+    // 3) Otherwise, start a new request and share that promise
+    this.inFlight = (async () => {
+      try {
+        const response = await this.http.get<SpaStatus>('/status');
+        this.lastStatus = response.data;
+        this.lastFetchTime = Date.now();
+        return response.data;
+      } finally {
+        this.inFlight = null;
+      }
+    })();
+
+    return this.inFlight;
   }
 
   public async setTemperatureF(setpointF: number): Promise<void> {
