@@ -91,15 +91,31 @@ export class ArcticSpasPumpsAccessory {
         }
       }
 
-      const service =
-        this.accessory.getService(cfg.displayName) ??
-        this.accessory.addService(Service.Switch, cfg.displayName, cfg.id);
+      if (cfg.id === 'pump1') {
+        const fan =
+    this.accessory.getService(cfg.displayName) ??
+    this.accessory.addService(Service.Fanv2, cfg.displayName, cfg.id);
 
-      service
-        .getCharacteristic(Characteristic.On)
+        fan.getCharacteristic(Characteristic.Active)
+          .onSet((value) => this.handleSetPump1Active(value));
+
+        fan.getCharacteristic(Characteristic.RotationSpeed)
+          .setProps({ minValue: 0, maxValue: 100, minStep: 1 })
+          .onSet((value) => this.handleSetPump1Speed(value));
+
+        this.services.set(cfg.id, fan);
+        continue;
+      }
+
+      const service =
+  this.accessory.getService(cfg.displayName) ??
+  this.accessory.addService(Service.Switch, cfg.displayName, cfg.id);
+
+      service.getCharacteristic(Characteristic.On)
         .onSet((value) => this.handleSet(cfg, value));
 
       this.services.set(cfg.id, service);
+
     }
 
     void this.pollStatus();
@@ -125,7 +141,24 @@ export class ArcticSpasPumpsAccessory {
       };
 
       // Pumps: treat anything other than "off" as on
-      setSwitch('pump1', Boolean(status.pump1 && status.pump1 !== 'off'));
+      const pump1Svc = this.services.get('pump1');
+      if (pump1Svc) {
+        const pump1 = status.pump1 ?? 'off';
+        const isActive = pump1 !== 'off';
+
+        pump1Svc.updateCharacteristic(
+          Characteristic.Active,
+          isActive ? Characteristic.Active.ACTIVE : Characteristic.Active.INACTIVE,
+        );
+
+        const speed =
+          pump1 === 'high' ? 100 :
+            pump1 === 'low' ? 33 :
+              0;
+
+        pump1Svc.updateCharacteristic(Characteristic.RotationSpeed, speed);
+      }
+
       setSwitch('pump2', Boolean(status.pump2 && status.pump2 !== 'off'));
       setSwitch('pump3', Boolean(status.pump3 && status.pump3 !== 'off'));
       setSwitch('pump4', Boolean(status.pump4 && status.pump4 !== 'off'));
@@ -182,9 +215,8 @@ export class ArcticSpasPumpsAccessory {
   }
 
   private async handleSetPump(id: string, on: boolean): Promise<void> {
-    // For now, map "On" to "high" and "Off" to "off"
-    const pumpNumber = id.replace('pump', '') as '1' | '2' | '3' | '4' | '5';
-    const state = on ? 'high' : 'off';
+    const pumpNumber = id.replace('pump', '') as '2' | '3' | '4' | '5';
+    const state = on ? 'on' : 'off';
     this.platform.log.info(`Setting pump ${pumpNumber} -> ${state}`);
     await this.client.setPump(pumpNumber, state);
   }
@@ -229,4 +261,58 @@ export class ArcticSpasPumpsAccessory {
       }
     }, 1000);
   }
+
+  private async handleSetPump1Active(value: CharacteristicValue): Promise<void> {
+    const { Characteristic } = this.platform;
+    const active = Number(value) === Characteristic.Active.ACTIVE;
+
+    try {
+      if (!active) {
+        this.platform.log.info('Setting pump 1 -> off');
+        await this.client.setPump('1', 'off');
+        return;
+      }
+
+      // If turning on, default to low unless user sets speed
+      this.platform.log.info('Setting pump 1 -> low');
+      await this.client.setPump('1', 'low');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.platform.log.error('Failed to set Pump 1 active:', message);
+      throw error;
+    }
+  }
+
+  private async handleSetPump1Speed(value: CharacteristicValue): Promise<void> {
+    const speed = typeof value === 'number' ? value : Number(value);
+
+    try {
+      let state: 'off' | 'low' | 'high';
+      if (speed <= 0) {
+        state = 'off';
+      } else if (speed < 67) {
+        state = 'low';
+      } else {
+        state = 'high';
+      }
+
+      this.platform.log.info(`Setting pump 1 -> ${state}`);
+      await this.client.setPump('1', state);
+
+      // Keep Active consistent with speed
+      const { Characteristic } = this.platform;
+      const pump1Svc = this.services.get('pump1');
+      if (pump1Svc) {
+        pump1Svc.updateCharacteristic(
+          Characteristic.Active,
+          state === 'off' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE,
+        );
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.platform.log.error('Failed to set Pump 1 speed:', message);
+      throw error;
+    }
+  }
+
 }
