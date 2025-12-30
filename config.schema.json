@@ -12,7 +12,7 @@
     "properties": {
       "name": { "title": "Name", "type": "string", "default": "Arctic Spas" },
       "apiKey": {
-        "title": "X-API-KEY",
+        "title": "Arctic Spas API Key",
         "type": "string"
       },
       "pollIntervalSeconds": {
@@ -69,32 +69,32 @@
       "enableBlower1": {
         "title": "Enable Blower 1",
         "type": "boolean",
-        "default": true
+        "default": false
       },
       "enableBlower2": {
         "title": "Enable Blower 2",
         "type": "boolean",
-        "default": true
+        "default": false
       },
       "enableEasyMode": {
         "title": "Enable Easy Mode",
         "type": "boolean",
-        "default": true
+        "default": false
       },
       "enableSds": {
         "title": "Enable SDS",
         "type": "boolean",
-        "default": true
+        "default": false
       },
       "enableYess": {
         "title": "Enable YESS",
         "type": "boolean",
-        "default": true
+        "default": false
       },
       "enableFogger": {
         "title": "Enable Fogger",
         "type": "boolean",
-        "default": true
+        "default": false
       }
     }
   },

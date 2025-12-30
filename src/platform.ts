@@ -159,13 +159,13 @@ export class ArcticSpasPlatform implements DynamicPlatformPlugin {
         ...(this.config.pump5Mode ? { pump5: this.config.pump5Mode } : {}),
       },
 
-      blower1: this.config.enableBlower1 ?? true,
-      blower2: this.config.enableBlower2 ?? true,
+      blower1: this.config.enableBlower1 ?? false,
+      blower2: this.config.enableBlower2 ?? false,
 
       easymode: this.config.enableEasyMode ?? true,
-      sds: this.config.enableSds ?? true,
-      yess: this.config.enableYess ?? true,
-      fogger: this.config.enableFogger ?? true,
+      sds: this.config.enableSds ?? false,
+      yess: this.config.enableYess ?? false,
+      fogger: this.config.enableFogger ?? false,
     } as const;
 
 
