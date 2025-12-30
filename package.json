@@ -44,8 +44,6 @@
   ],
   "types": "dist/index.d.ts",
   "dependencies": {
-    "homebridge-lib": "^7.1.12",
-    "axios": "^1.13.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
