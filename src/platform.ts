@@ -28,6 +28,13 @@ interface ArcticSpaConfig extends PlatformConfig {
   enablePump4?: boolean;
   enablePump5?: boolean;
 
+  /** Optional pump mode overrides. Defaults: pump1=three-state, others=two-state */
+  pump1Mode?: 'two-state' | 'three-state';
+  pump2Mode?: 'two-state' | 'three-state';
+  pump3Mode?: 'two-state' | 'three-state';
+  pump4Mode?: 'two-state' | 'three-state';
+  pump5Mode?: 'two-state' | 'three-state';
+
   enableBlower1?: boolean;
   enableBlower2?: boolean;
 
@@ -69,7 +76,7 @@ export class ArcticSpasPlatform implements DynamicPlatformPlugin {
     // Work out the poll interval first
     if (
       typeof this.config.pollIntervalSeconds === 'number' &&
-    this.config.pollIntervalSeconds >= 15
+      this.config.pollIntervalSeconds >= 15
     ) {
       this.pollIntervalMs = this.config.pollIntervalSeconds * 1000;
     }
@@ -143,6 +150,14 @@ export class ArcticSpasPlatform implements DynamicPlatformPlugin {
       pump3: this.config.enablePump3 ?? true,
       pump4: this.config.enablePump4 ?? false,
       pump5: this.config.enablePump5 ?? false,
+
+      pumpModes: {
+        ...(this.config.pump1Mode ? { pump1: this.config.pump1Mode } : {}),
+        ...(this.config.pump2Mode ? { pump2: this.config.pump2Mode } : {}),
+        ...(this.config.pump3Mode ? { pump3: this.config.pump3Mode } : {}),
+        ...(this.config.pump4Mode ? { pump4: this.config.pump4Mode } : {}),
+        ...(this.config.pump5Mode ? { pump5: this.config.pump5Mode } : {}),
+      },
 
       blower1: this.config.enableBlower1 ?? true,
       blower2: this.config.enableBlower2 ?? true,
