@@ -1,5 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
-
+// spaClient.ts
 export type OnOffState = 'on' | 'off';
 
 export interface SpaStatus {
@@ -30,29 +29,35 @@ export interface SpaStatus {
   orp_status?: string;
   spaboyPh?: number;
   spaboyOrp?: number;
-
-  // extend with any other fields you care about
 }
 
+type HttpMethod = 'GET' | 'PUT';
+
+
+async function safeReadText(res: Response): Promise<string> {
+  try {
+    const t = await res.text();
+    return t?.trim() ?? '';
+  } catch {
+    return '';
+  }
+}
+
+
 export class SpaClient {
-  private readonly http: AxiosInstance;
+  private readonly baseUrl = 'https://api.myarcticspa.com/v2/spa';
+  private readonly apiKey: string;
   private readonly minIntervalMs: number;
+  private readonly timeoutMs: number;
 
   private lastStatus: SpaStatus | null = null;
   private lastFetchTime = 0;
   private inFlight: Promise<SpaStatus> | null = null;
 
-  public constructor(apiKey: string, minIntervalMs = 0) {
+  public constructor(apiKey: string, minIntervalMs = 0, timeoutMs = 5000) {
+    this.apiKey = apiKey;
     this.minIntervalMs = minIntervalMs;
-
-    this.http = axios.create({
-      baseURL: 'https://api.myarcticspa.com/v2/spa',
-      headers: {
-        'X-API-KEY': apiKey,
-        'Content-Type': 'application/json',
-      },
-      timeout: 5000,
-    });
+    this.timeoutMs = timeoutMs;
   }
 
   public async getStatus(): Promise<SpaStatus> {
@@ -71,10 +76,10 @@ export class SpaClient {
     // 3) Otherwise, start a new request and share that promise
     this.inFlight = (async () => {
       try {
-        const response = await this.http.get<SpaStatus>('/status');
-        this.lastStatus = response.data;
+        const data = await this.requestJson<SpaStatus>('GET', '/status');
+        this.lastStatus = data;
         this.lastFetchTime = Date.now();
-        return response.data;
+        return data;
       } finally {
         this.inFlight = null;
       }
@@ -84,26 +89,26 @@ export class SpaClient {
   }
 
   public async setTemperatureF(setpointF: number): Promise<void> {
-    await this.http.put('/temperature', { setpointF });
+    await this.requestJson('PUT', '/temperature', { setpointF });
   }
 
   public async setLights(on: boolean): Promise<void> {
     const state: OnOffState = on ? 'on' : 'off';
-    await this.http.put('/lights', { state });
+    await this.requestJson('PUT', '/lights', { state });
   }
 
   public async setPump(
     pump: '1' | '2' | '3' | '4' | '5' | 'all',
     state: 'off' | 'on' | 'low' | 'high',
   ): Promise<void> {
-    await this.http.put(`/pumps/${pump}`, { state });
+    await this.requestJson('PUT', `/pumps/${pump}`, { state });
   }
 
   public async setBlower(
     blower: '1' | '2' | 'all',
     state: OnOffState,
   ): Promise<void> {
-    await this.http.put(`/blowers/${blower}`, { state });
+    await this.requestJson('PUT', `/blowers/${blower}`, { state });
   }
 
   public async setToggle(
@@ -111,10 +116,55 @@ export class SpaClient {
     on: boolean,
   ): Promise<void> {
     const state: OnOffState = on ? 'on' : 'off';
-    await this.http.put(`/${path}`, { state });
+    await this.requestJson('PUT', `/${path}`, { state });
   }
 
   public async boost(): Promise<void> {
-    await this.http.put('/boost');
+    await this.requestJson('PUT', '/boost');
+  }
+
+  private async requestJson<T = unknown>(
+    method: HttpMethod,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers: {
+          'X-API-KEY': this.apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+
+      // Helpful error text (avoid “just status code”)
+      if (!res.ok) {
+        const text = await safeReadText(res);
+        throw new Error(`Arctic Spas API ${method} ${path} failed: ${res.status} ${res.statusText}${text ? ` - ${text}` : ''}`);
+      }
+
+      // Some endpoints might return no body
+      if (res.status === 204) {
+        return undefined as T;
+      }
+
+      // If content-type isn't json, still try to parse, but fail cleanly
+      const contentType = res.headers.get('content-type') ?? '';
+      if (!contentType.includes('application/json')) {
+        const text = await safeReadText(res);
+        // If caller expects void, allow non-json success
+        return (text as unknown) as T;
+      }
+
+      return (await res.json()) as T;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }

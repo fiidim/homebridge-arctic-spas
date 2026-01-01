@@ -8,7 +8,7 @@
   "homepage": "https://github.com/fiidim/homebridge-arctic-spas#readme",
   "repository": {
     "type": "git",
-    "url": "git@github.com:fiidim/homebridge-arctic-spas.git"
+    "url": "https://github.com/fiidim/homebridge-arctic-spas.git"
   },
   "bugs": {
     "url": "https://github.com/fiidim/homebridge-arctic-spas/issues"
@@ -44,8 +44,6 @@
   ],
   "types": "dist/index.d.ts",
   "dependencies": {
-    "homebridge-lib": "^7.1.12",
-    "axios": "^1.13.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
